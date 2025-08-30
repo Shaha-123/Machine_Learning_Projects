@@ -1,0 +1,29 @@
+#Linear Regression - Student Score Prediction
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+
+# Dataset
+data = {
+    'Name' : ['Ram','Chandru','Shaha','Sena','Muga','Sam'],
+    'Score' : [40,50,60,50,70,70],
+    'Hours' : [3,4,5,6,4,5] 
+}
+
+df = pd.DataFrame(data)
+
+# Encode categorical column 'Name'
+X = pd.get_dummies(df[['Name','Hours']], drop_first=True)
+Y = df[['Score']]
+
+# Split data
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+
+# Train model
+model = LinearRegression()
+model.fit(X_train, Y_train)
+
+# Predict
+Y_pred = model.predict(X_test)
+
+print("Predicted Scores:", Y_pred)
