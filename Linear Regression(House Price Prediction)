@@ -1,0 +1,30 @@
+#Linear regression-House Price prediction
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+
+# Simple dataset
+sqft_living = np.array([500, 1000, 1500, 2000, 2500]).reshape(-1, 1)
+price = np.array([150000, 300000, 450000, 600000, 750000])
+
+# Train linear regression
+model = LinearRegression()
+model.fit(sqft_living, price)
+
+# Predictions
+pred = model.predict(sqft_living)
+
+# Print coefficients
+print("Coefficient (slope):", model.coef_[0])
+print("Intercept:", model.intercept_)
+print("Equation: price = {:.0f} * sqft + {:.0f}".format(model.coef_[0], model.intercept_))
+print("R² score:", model.score(sqft_living, price))
+
+# Plot
+plt.scatter(sqft_living, price, color="blue", label="Actual Data")
+plt.plot(sqft_living, pred, color="red", label="Linear Regression Line")
+plt.xlabel("House Size (sqft)")
+plt.ylabel("Price")
+plt.legend()
+plt.show()
