@@ -1,0 +1,56 @@
+import pandas as pd
+import numpy as np 
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.datasets import load_diabetes
+
+diabetes = load_diabetes(as_frame=True)
+df = diabetes.frame
+df['Diabetic'] = (df['target'] > 140).astype(int)
+
+X = df.drop(columns=['target','Diabetic'])
+Y = df['Diabetic']
+
+X_train,X_test,Y_train,Y_test = train_test_split(X,Y,test_size=0.2,random_state=42)
+
+model = LogisticRegression(max_iter = 2000)
+model.fit(X_train,Y_train)
+
+Y_pred= model.predict(X_test)
+
+print("Accuracy SCore: ",accuracy_score(Y_test,Y_pred))
+
+print("\n🩺 Enter Patient Details:")
+age = float(input("Age (normalized, e.g., 0.03 for slightly above average): "))
+sex = float(input("Sex (-0.044 = female, 0.05 = male approx): "))
+bmi = float(input("BMI (normalized, e.g., 0.06 for above average): "))
+bp = float(input("Blood Pressure (normalized, e.g., 0.02): "))
+s1 = float(input("Serum measurement 1 (normalized): "))
+s2 = float(input("Serum measurement 2 (normalized): "))
+s3 = float(input("Serum measurement 3 (normalized): "))
+s4 = float(input("Serum measurement 4 (normalized): "))
+s5 = float(input("Serum measurement 5 (normalized): "))
+s6 = float(input("Serum measurement 6 (normalized): "))
+
+# Prepare patient data
+patient_data = [[age, sex, bmi, bp, s1, s2, s3, s4, s5, s6]]
+
+# Prediction
+prediction = model.predict(patient_data)[0]
+probability = model.predict_proba(patient_data)[0][1]
+
+print("\n🔍 Prediction Result:")
+if prediction == 1:
+    print(f"⚠️ Patient is likely Diabetic (Probability: {probability:.2f})")
+else:
+    print(f"✅ Patient is NOT Diabetic (Probability: {probability:.2f})")
+
+
+#OUTPUT
+#Accuracy SCore:  0.7415730337078652
+#🩺 Enter Patient Details:
+🔍 Prediction Result:
+⚠️ Patient is likely Diabetic (Probability: 1.00)
+
+ 
