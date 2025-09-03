@@ -1,0 +1,89 @@
+#KNN for movie recommendation 
+import pandas as pd
+import requests, zipfile, io, os
+from sklearn.neighbors import NearestNeighbors
+
+# -------------------------------
+# 1. Download + Load MovieLens Data
+# -------------------------------
+url = "https://files.grouplens.org/datasets/movielens/ml-latest-small.zip"
+dataset_dir = "movielens/ml-latest-small"
+
+if not os.path.exists(dataset_dir):
+    print("📥 Downloading MovieLens dataset...")
+    r = requests.get(url)
+    z = zipfile.ZipFile(io.BytesIO(r.content))
+    z.extractall("movielens")
+    print("✅ Download complete!")
+
+ratings = pd.read_csv(os.path.join(dataset_dir, "ratings.csv"))
+movies = pd.read_csv(os.path.join(dataset_dir, "movies.csv"))
+
+# -------------------------------
+# 2. Create User-Movie Matrix
+# -------------------------------
+user_movie_matrix = ratings.pivot(index='userId', columns='movieId', values='rating').fillna(0)
+
+# -------------------------------
+# 3. Train KNN (Cosine Similarity)
+# -------------------------------
+knn = NearestNeighbors(metric='cosine', algorithm='brute')
+knn.fit(user_movie_matrix)
+
+# -------------------------------
+# 4. Pick a Target User
+# -------------------------------
+target_user_id = 5
+target_vector = user_movie_matrix.loc[target_user_id].values.reshape(1, -1)
+
+# Find nearest neighbors (users)
+distances, indices = knn.kneighbors(target_vector, n_neighbors=6)  # includes the user itself
+
+print(f"\n👥 Top similar users to User {target_user_id}:")
+for i in range(1, len(indices[0])):  # skip the first (self)
+    print(f"User {user_movie_matrix.index[indices[0][i]]} "
+          f"(similarity: {1 - distances[0][i]:.2f})")
+
+# -------------------------------
+# 5. Recommend Movies
+# -------------------------------
+# Movies already rated by target user
+target_user_rated = set(ratings[ratings['userId'] == target_user_id]['movieId'])
+
+# Collect ratings from similar users
+similar_users = [user_movie_matrix.index[indices[0][i]] for i in range(1, len(indices[0]))]
+similar_users_ratings = ratings[ratings['userId'].isin(similar_users)]
+
+# Average ratings for each movie among similar users
+recommendations = (similar_users_ratings.groupby('movieId')
+                   .mean()['rating']
+                   .sort_values(ascending=False))
+
+# Remove movies already rated by target user
+recommendations = recommendations.drop(target_user_rated, errors='ignore')
+
+# Show top 5 recommended movies
+top5 = recommendations.head(5).index
+print("\n🎥 Recommended Movies:")
+print(movies[movies['movieId'].isin(top5)][['movieId', 'title']])
+
+
+#OUPUT
+
+📥 Downloading MovieLens dataset...
+✅ Download complete!
+
+👥 Top similar users to User 5:
+User 470 (similarity: 0.52)
+User 229 (similarity: 0.52)
+User 565 (similarity: 0.51)
+User 235 (similarity: 0.51)
+User 142 (similarity: 0.47)
+
+🎥 Recommended Movies:
+     movieId                                 title
+24        25              Leaving Las Vegas (1995)
+202      236                    French Kiss (1995)
+314      356                   Forrest Gump (1994)
+510      593      Silence of the Lambs, The (1991)
+615      780  Independence Day (a.k.a. ID4) (1996)
